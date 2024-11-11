@@ -19,13 +19,21 @@ DB_PASS = os.getenv('DB_PASS')
 
 def get_db_data():
     try:
+        # Add connect_timeout and options for longer query timeout
         conn = psycopg2.connect(
             host=DB_HOST,
             database=DB_NAME,
             user=DB_USER,
-            password=DB_PASS
+            password=DB_PASS,
+            connect_timeout=30,  # Connection timeout in seconds
+            options='-c statement_timeout=900000'  # Query timeout in milliseconds (15 minutes)
         )
+        
         cur = conn.cursor()
+        
+        # Set a longer statement timeout for this specific connection
+        cur.execute("SET statement_timeout = '900000'")  # 15 minutes in milliseconds
+        
         cur.execute("SELECT * FROM public.latest_block_and_missing_view")
         result = cur.fetchone()
         cur.close()
